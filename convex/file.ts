@@ -1,6 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 import { mutation, MutationCtx, query, QueryCtx } from './_generated/server'
 import { getUser } from './users';
+import { fileTypes } from './schema';
 
 export const generateUploadUrl = mutation(async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -25,7 +26,8 @@ export const createFile = mutation({
     args: {
         name: v.string(),
         fileId: v.id('_storage'),
-        orgId: v.string()
+        orgId: v.string(),
+        type: fileTypes
     },
     async handler(ctx, args) {
         const identity = await ctx.auth.getUserIdentity();
@@ -41,7 +43,8 @@ export const createFile = mutation({
         await ctx.db.insert('files', {
             name: args.name,
             fileId: args.fileId,
-            orgId: args.orgId
+            orgId: args.orgId,
+            type: args.type
         });
     },
 });
@@ -83,7 +86,6 @@ export const deleteFile = mutation({
         if (!file)
             throw new ConvexError('This file does not exist.');
 
-        //TODO: FIX THIS
         const hasAccess = await hasAccessToOrg(ctx, identity.tokenIdentifier, file.orgId);
         
         if (!hasAccess)
